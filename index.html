@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math Quiz Game Arcade </title>
+  <style>
+    :root{
+      --bg1:#090014; --bg2:#140427; --panel:rgba(20,10,40,.78); --line:rgba(188,133,255,.35);
+      --purple:#b26cff; --purple2:#7c3cff; --pink:#ff4fd8; --cyan:#57f3ff; --yellow:#ffd84d;
+      --green:#43e97b; --red:#ff5b6e; --white:#f7f3ff;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; font-family:"Trebuchet MS", Arial, sans-serif; color:var(--white);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(178,108,255,.12), transparent 18%),
+        radial-gradient(circle at 80% 15%, rgba(87,243,255,.10), transparent 18%),
+        radial-gradient(circle at 50% 80%, rgba(255,79,216,.08), transparent 22%),
+        linear-gradient(135deg, var(--bg1), var(--bg2) 52%, #06000f);
+      min-height:100vh; overflow-x:hidden;
+    }
+    body::before{
+      content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.18;
+      background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size:38px 38px;
+    }
+    .stars, .stars::after, .stars::before{
+      content:""; position:fixed; inset:0; pointer-events:none; z-index:-2; opacity:.22;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.95) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(178,108,255,.85) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(87,243,255,.85) 1px, transparent 1.5px);
+      background-size:210px 210px,260px 260px,320px 320px;
+      background-position:0 0,60px 120px,120px 40px;
+      animation:twinkle 8s linear infinite;
+    }
+    .stars::before{animation-duration:12s; opacity:.15; transform:scale(1.05)}
+    .stars::after{animation-duration:16s; opacity:.12; transform:scale(1.12)}
+    @keyframes twinkle{from{transform:translateY(0)}to{transform:translateY(18px)}}
+    .floating-shape{position:fixed;border-radius:18px;filter:blur(1px);opacity:.25;pointer-events:none;animation:floaty 8s ease-in-out infinite;z-index:-2}
+    .shape1{width:120px;height:120px;left:-30px;top:120px;background:linear-gradient(45deg,var(--purple),transparent)}
+    .shape2{width:90px;height:90px;right:40px;top:200px;background:linear-gradient(45deg,var(--pink),transparent);animation-delay:1.8s}
+    .shape3{width:140px;height:140px;right:-30px;bottom:90px;background:linear-gradient(45deg,var(--cyan),transparent);animation-delay:3s}
+    @keyframes floaty{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-22px) rotate(8deg)}}
+
+    .bg-slideshow{position:fixed; inset:0; z-index:-4; overflow:hidden}
+    .bg-slide{position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; animation:bgFade 28s infinite; filter:saturate(1.05) brightness(.22) blur(1px); transform:scale(1.08)}
+    .bg-slide::after{content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(8,0,20,.86), rgba(20,4,39,.84) 42%, rgba(4,0,12,.9))}
+    .bg-slide:nth-child(1){animation-delay:0s}
+    .bg-slide:nth-child(2){animation-delay:7s}
+    .bg-slide:nth-child(3){animation-delay:14s}
+    .bg-slide:nth-child(4){animation-delay:21s}
+    @keyframes bgFade{0%,20%{opacity:0}5%,17%{opacity:1}25%,100%{opacity:0}}
+
+    .container{width:min(1180px,92%); margin:auto; position:relative; z-index:1}
+    section{padding:28px 0}
+    .panel{
+      background:var(--panel); border:1px solid var(--line); border-radius:28px;
+      box-shadow:0 0 0 1px rgba(255,255,255,.03), 0 20px 60px rgba(0,0,0,.4), 0 0 35px rgba(124,60,255,.18);
+      backdrop-filter:blur(10px);
+    }
+    .hero{min-height:100vh; display:flex; align-items:center; padding:30px 0 40px}
+    .hero-wrap{display:grid; grid-template-columns:1.08fr .92fr; gap:28px; width:100%; align-items:center}
+    .hero-card{padding:34px}
+    .tag{
+      display:inline-flex; align-items:center; gap:10px; padding:10px 16px; border-radius:999px;
+      background:rgba(255,216,77,.12); color:var(--yellow); border:1px solid rgba(255,216,77,.25);
+      font-weight:700; letter-spacing:.4px; box-shadow:0 0 18px rgba(255,216,77,.12);
+    }
+    .title{
+      font-size:clamp(42px,8vw,86px); line-height:.95; margin:18px 0 14px; font-weight:900; letter-spacing:2px; text-transform:uppercase;
+      text-shadow:0 0 15px rgba(178,108,255,.45), 0 0 32px rgba(255,79,216,.18); animation:neonPulse 2.4s infinite alternate;
+    }
+    @keyframes neonPulse{from{filter:drop-shadow(0 0 0 rgba(255,255,255,0))}to{filter:drop-shadow(0 0 12px rgba(178,108,255,.28))}}
+    .subtitle{font-size:22px; color:#efe3ff; margin-bottom:10px}
+    .hero p{color:#d5c7ee; line-height:1.75; font-size:17px}
+    .hero-actions{display:flex; flex-wrap:wrap; gap:14px; margin-top:24px}
+    .btn{
+      border:none; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:14px 24px; border-radius:16px; font-size:16px; font-weight:800; cursor:pointer; transition:.25s ease;
+    }
+    .btn:hover{transform:translateY(-3px) scale(1.03)}
+    .btn-primary{color:#130024; background:linear-gradient(135deg,var(--yellow),#fff0a5); box-shadow:0 0 24px rgba(255,216,77,.25)}
+    .btn-secondary{color:var(--white); background:linear-gradient(135deg,var(--purple2),var(--pink)); box-shadow:0 0 24px rgba(178,108,255,.25)}
+    .btn-ghost{color:var(--white); background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12)}
+    .hero-preview{padding:24px; position:relative; overflow:hidden; min-height:460px}
+    .screen{
+      border-radius:22px; padding:22px; background:linear-gradient(180deg, rgba(7,0,17,.98), rgba(18,5,34,.95));
+      border:1px solid rgba(255,255,255,.08); min-height:412px; box-shadow:inset 0 0 24px rgba(87,243,255,.08), inset 0 0 40px rgba(178,108,255,.08);
+      position:relative; overflow:hidden;
+    }
+    .scanline{position:absolute; left:0; right:0; height:90px; background:linear-gradient(to bottom, transparent, rgba(87,243,255,.08), transparent); animation:scan 4s linear infinite; pointer-events:none}
+    @keyframes scan{from{top:-100px}to{top:100%}}
+    .mini-scoreboard{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:16px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); margin-bottom:18px; font-weight:700; color:#eedcff}
+    .pixel-box{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:18px; margin-top:12px}
+    .chip{display:inline-block; padding:8px 14px; border-radius:999px; font-size:13px; margin:4px 6px 0 0; background:rgba(178,108,255,.14); border:1px solid rgba(178,108,255,.22); color:#ebdbff}
+    .orb{position:absolute; border-radius:50%; filter:blur(8px); opacity:.35; pointer-events:none}
+    .orb1{width:130px; height:130px; right:-20px; top:-10px; background:var(--purple)}
+    .orb2{width:100px; height:100px; left:-20px; bottom:20px; background:var(--cyan)}
+
+    .section-title{font-size:34px; margin:0 0 18px; text-shadow:0 0 12px rgba(178,108,255,.2)}
+    .section-sub{color:#d3c3ec; line-height:1.8; margin:0 0 18px}
+    .grid-3,.grid-4,.schematic-wrap,.process-grid{display:grid; gap:20px}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .process-grid{grid-template-columns:repeat(3,1fr)}
+    .card{padding:22px}
+    .card h3{margin:0 0 12px; color:var(--yellow); font-size:22px}
+    .card p,.card li{color:#dccdf1; line-height:1.7}
+    .card ul{padding-left:18px; margin:10px 0 0}
+
+    .team-card{padding:18px; text-align:center; overflow:hidden; position:relative; transition:.3s ease}
+    .team-card:hover{transform:translateY(-6px)}
+    .avatar{
+      width:200px; height:200px; border-radius:24px; margin:6px auto 14px; display:flex; align-items:center; justify-content:center;
+      font-size:36px; font-weight:900; color:#180029; background:linear-gradient(135deg,var(--cyan),var(--purple),var(--pink));
+      box-shadow:0 0 22px rgba(178,108,255,.25); border:3px solid rgba(255,255,255,.18);
+    }
+    .team-photo{width:100%; height:250px; object-fit:cover; border-radius:20px; border:1px solid rgba(255,255,255,.12); box-shadow:0 0 20px rgba(178,108,255,.12); background:rgba(255,255,255,.04); display:none}
+    .photo-slot{margin-top:12px; border:1.5px dashed rgba(255,255,255,.18); border-radius:16px; padding:12px; color:#bea8de; font-size:13px; background:rgba(255,255,255,.03)}
+    .upload-btn{display:inline-flex; margin-top:12px; padding:10px 14px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.13); color:#f4ebff; font-size:13px; font-weight:700; cursor:pointer}
+    .upload-input{display:none}
+
+    .schematic-wrap{grid-template-columns:1fr 1fr; align-items:stretch}
+    .image-placeholder{
+      min-height:300px; border-radius:24px; border:1.5px dashed rgba(255,255,255,.2);
+      background:linear-gradient(135deg, rgba(178,108,255,.12), rgba(87,243,255,.08)), rgba(255,255,255,.03);
+      display:flex; align-items:center; justify-content:center; padding:20px; text-align:center; color:#e8ddff; line-height:1.8; position:relative; overflow:hidden;
+    }
+    .image-placeholder::before{content:"ARDUINO SCHEMATIC"; position:absolute; top:16px; left:16px; font-size:12px; letter-spacing:1px; color:rgba(255,255,255,.55)}
+    .schematic-real{width:100%; min-height:320px; height:100%; object-fit:cover; border-radius:18px; border:1px solid rgba(255,255,255,.10)}
+
+    .process-card{padding:16px; overflow:hidden; transition:.3s ease}
+    .process-card:hover{transform:translateY(-6px)}
+    .process-img{width:100%; height:200px; border-radius:18px; border:1px solid rgba(255,255,255,.12); margin-bottom:14px; box-shadow:0 0 20px rgba(178,108,255,.10); background:linear-gradient(135deg, rgba(178,108,255,.14), rgba(87,243,255,.06))}
+    .process-card h3{margin:0 0 10px; color:var(--yellow); font-size:21px}
+    .process-card p{margin:0; color:#dccdf1; line-height:1.75}
+
+    .quiz-panel{padding:24px}
+    .hud{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px}
+    .hud-box{padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); text-align:center; box-shadow:inset 0 0 15px rgba(255,255,255,.02)}
+    .hud-label{font-size:13px; color:#cdb9ea; margin-bottom:6px; letter-spacing:.8px; text-transform:uppercase}
+    .hud-value{font-size:28px; font-weight:900}
+    .timer-low{color:var(--red); text-shadow:0 0 10px rgba(255,91,110,.3)}
+    .progress-track{width:100%; height:14px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; margin-bottom:18px; border:1px solid rgba(255,255,255,.08)}
+    .progress-bar{height:100%; width:100%; background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink)); transition:width 1s linear}
+    .question-box{
+      padding:24px; border-radius:24px; background:linear-gradient(180deg, rgba(17,4,33,.94), rgba(28,10,52,.96));
+      border:1px solid rgba(255,255,255,.08); min-height:150px; display:flex; align-items:center; justify-content:center;
+      text-align:center; font-size:clamp(22px,4vw,34px); font-weight:900; margin-bottom:18px; box-shadow:inset 0 0 22px rgba(178,108,255,.07)
+    }
+    .answers{display:grid; grid-template-columns:repeat(2,1fr); gap:16px}
+    .answer-btn{
+      padding:18px; border-radius:18px; border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      color:var(--white); font-size:18px; font-weight:800; cursor:pointer; transition:.2s ease; min-height:72px;
+    }
+    .answer-btn:hover{transform:translateY(-3px); box-shadow:0 0 18px rgba(178,108,255,.18)}
+    .answer-btn.correct{background:linear-gradient(135deg, rgba(67,233,123,.28), rgba(67,233,123,.18)); border-color:rgba(67,233,123,.65)}
+    .answer-btn.wrong{background:linear-gradient(135deg, rgba(255,91,110,.25), rgba(255,91,110,.14)); border-color:rgba(255,91,110,.65)}
+    .status-bar{min-height:34px; text-align:center; font-weight:800; margin:18px 0 0; color:#f2e6ff}
+
+    .winner-screen{display:none; text-align:center; padding:34px 20px 10px; animation:popIn .45s ease}
+    .winner-screen.show{display:block}
+    @keyframes popIn{from{transform:scale(.85); opacity:0}to{transform:scale(1); opacity:1}}
+    .winner-title{font-size:44px; margin:0 0 12px; color:var(--yellow); text-shadow:0 0 18px rgba(255,216,77,.25)}
+    .winner-score{font-size:24px; margin-bottom:16px; color:#f5eaff}
+    .trophy{font-size:70px; animation:bounce 1.6s infinite; display:inline-block}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:60; display:none}
+    .confetti.show{display:block}
+    .confetti span{position:absolute; top:-20px; width:12px; height:18px; border-radius:3px; animation:fall linear forwards; opacity:.95}
+    @keyframes fall{to{transform:translateY(110vh) rotate(760deg); opacity:1}}
+
+    footer{padding:34px 0 56px; text-align:center; color:#cfbfe4}
+    .footer-note{margin-top:10px; font-size:14px; opacity:.9}
+
+    @media (max-width:980px){
+      .hero-wrap,.grid-4,.grid-3,.schematic-wrap,.process-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:760px){
+      .hero{min-height:auto; padding-top:24px}
+      .hero-wrap,.grid-4,.grid-3,.schematic-wrap,.answers,.process-grid{grid-template-columns:1fr}
+      .hud{grid-template-columns:1fr}
+      .title{font-size:54px}
+      .hero-card,.hero-preview,.card,.quiz-panel{padding:20px}
+      .winner-title{font-size:34px}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-slideshow">
+    <div class="bg-slide" style="background-image:linear-gradient(135deg,#3b1368,#090014)"></div>
+    <div class="bg-slide" style="background-image:linear-gradient(135deg,#12204d,#090014)"></div>
+    <div class="bg-slide" style="background-image:linear-gradient(135deg,#4b0d3f,#090014)"></div>
+    <div class="bg-slide" style="background-image:linear-gradient(135deg,#0f3450,#090014)"></div>
+  </div>
+
+  <div class="stars"></div>
+  <div class="floating-shape shape1"></div>
+  <div class="floating-shape shape2"></div>
+  <div class="floating-shape shape3"></div>
+  <div class="confetti" id="confetti"></div>
+
+  <div class="container">
+    <section class="hero">
+      <div class="hero-wrap">
+        <div class="panel hero-card">
+          <div class="tag">Math Quiz Game Arcade</div>
+          <h1 class="title">QUIZ<br>GAME</h1>
+          <div class="subtitle">Асуулт хариултын тоглоом</div>
+          <p>
+            Математикийн хичээлийг илүү сонирхолтой, хөгжилтэй аргаар сурахад зориулсан
+            purple/black arcade style final веб танилцуулга. Дотор нь mini quiz game,
+            score, timer, winner screen, багийн card, Arduino схемийн хэсэг бүгд орсон.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="document.getElementById('game').scrollIntoView({behavior:'smooth'})">Тоглоом тоглох</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('team').scrollIntoView({behavior:'smooth'})">Багийн гишүүд</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('schematic').scrollIntoView({behavior:'smooth'})">Arduino хэсэг</button>
+          </div>
+        </div>
+
+        <div class="panel hero-preview">
+          <div class="orb orb1"></div>
+          <div class="orb orb2"></div>
+          <div class="screen">
+            <div class="scanline"></div>
+            <div class="mini-scoreboard">
+              <div>⚡ Arcade Preview</div>
+              <div>Score <span id="previewScore">000</span></div>
+            </div>
+            <div class="pixel-box">
+              <h3 style="margin-top:0;color:var(--cyan)">Project Highlights</h3>
+              <div class="chip">Math quiz game</div>
+              <div class="chip">Timer system</div>
+              <div class="chip">Winner screen</div>
+              <div class="chip">Team cards</div>
+              <div class="chip">Arduino schematic</div>
+            </div>
+            <div class="pixel-box">
+              <h3 style="margin-top:0;color:var(--yellow)">Used In Project</h3>
+              <p style="margin:0;color:#d8caef;line-height:1.8">
+                Arduino Uno, LCD 16x2, LED, push button, piezo, breadboard.
+              </p>
+            </div>
+            <div class="pixel-box">
+              <h3 style="margin-top:0;color:var(--pink)">8-р ангийн бүтээл</h3>
+              <p style="margin:0;color:#d8caef;line-height:1.8">
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Төслийн тухай</h2>
+      <div class="grid-3">
+        <div class="panel card">
+          <h3>Танилцуулга</h3>
+          <p>Манай төсөл нь сурагчдад зориулсан асуулт-хариултын тоглоом юм. Энэхүү тоглоом нь математикийн тухай асуултуудыг агуулсан бөгөөд хүүхдүүдийн математикийн мэдлэгийг сайжруулах, мөн уг хичээлд илүү сонирхолтой болгох зорилготой.
+Тоглоомын явцад сурагчид асуултад хариулж, зөв хариулсан тохиолдолд оноо авах бөгөөд энэ нь суралцах үйл явцыг илүү хөгжилтэй, өрсөлдөөнтэй болгоно.</p>
+        </div>
+        <div class="panel card">
+          <h3>Зорилго</h3>
+          <p>Манай төслийн зорилго нь сурагчдын математикийн мэдлэгийг нэмэгдүүлэх, логик сэтгэлгээг хөгжүүлэх, мөн суралцах үйл явцыг илүү сонирхолтой, хөгжилтэй болгох  зорилготой. Энэхүү тоглоомоор дамжуулан сурагчид математикийн бодлогуудыг хялбар, илүү хурдтай аргаар бодож сурна.</p>
+        </div>
+        <div class="panel card">
+          <h3>Ашигласан хэрэгсэл</h3>
+          <ul>
+            <li>LCD 16×2 дэлгэц</li>
+            <li>Arduino</li>
+            <li>4 LED гэрэл</li>
+            <li>4 товчлуур</li>
+            <li>Piezo дуугаргагч</li>
+            <li>Breadboard</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="team">
+      <h2 class="section-title">Багийн гишүүд</h2>
+      <div class="grid-4">
+
+        <div class="panel team-card">
+          <div class="avatar" id="avatar1"><img width="200" height="200" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.2&permmsgid=msg-a:r-1660016423142973063&th=19d9473235672c9d&view=fimg&fur=ip&permmsgid=msg-a:r-1660016423142973063&sz=s0-l75-ft&attbid=ANGjdJ-M2feToM2WwqUIkhmpTI63SRrzK3xqtqGJ89n2fdA4xaOLqjMt4pQR5Lxag2jVO5XKjuGeP684Ev4GzPlz500hWv9x_O151rZYWFAxeX47RD7uNr-5t_puajk&disp=emb&realattid=ii_mo0yc69o1&zw" alt=""></div>
+          <img class="team-photo" id="photo1" alt="Х. Болор" />
+          <h3 style="margin-bottom:6px">Х. Болор</h3>
+          <p style="margin:0;color:#ccb8e8">Багийн гишүүн</p> 
+        </div>
+        <div class="panel team-card">
+          <div class="avatar" id="avatar2"><img width="200" height="200" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.1&permmsgid=msg-a:r1897144165031614438&th=19d963b910ac83ba&view=fimg&fur=ip&permmsgid=msg-a:r1897144165031614438&sz=s0-l75-ft&attbid=ANGjdJ-BKRb9KelmrQAPxRZoHWpa3A-g32xLo_jt3ab2t4ubeAro88DKBJk78K7-L9Tb76JyOf9g-HHbn9-nIQYlejsCYlEI4RmE1u9QQJk8fIyZNCbReZ5eCp37Wmg&disp=emb&realattid=ii_19d963b821f56baaaad1&zw" alt="">
+          </div>
+          <img class="team-photo" id="photo2" alt="Б. Мандахнаран" />
+          <h3 style="margin-bottom:6px">Б. Мандахнаран</h3>
+          <p style="margin:0;color:#ccb8e8">Багийн гишүүн</p>
+         </div>
+        <div class="panel team-card">
+          <div class="avatar" id="avatar3"><img width="200" height="200" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.1&permmsgid=msg-a:r-1660016423142973063&th=19d9473235672c9d&view=fimg&fur=ip&permmsgid=msg-a:r-1660016423142973063&sz=s0-l75-ft&attbid=ANGjdJ8wF6pIdNra6Hp_mq56QSE_fdDhfpUI5YNgQLa-_1lsYAqpAs8RNQdhpWe8VexpHgihSLouUrd5eMPBuO6xYNm_dJkO8WwcQBCbc6TMDTcikLM9-LQW2dszip0&disp=emb&realattid=ii_mo0ybzgu0&zw" alt=""></div>
+          <img class="team-photo" id="photo3" alt="Б. Мөнхтөгс" />
+          <h3 style="margin-bottom:6px">Б. Мөнхтөгс</h3>
+          <p style="margin:0;color:#ccb8e8">Багийн ахлагч</p>
+          </div>
+        <div class="panel team-card">
+          <div class="avatar" id="avatar4">Э</div>
+          <img class="team-photo" id="photo4" alt="С. Эзлэн" />
+          <h3 style="margin-bottom:6px">С. Эзлэн</h3>
+          <p style="margin:0;color:#ccb8e8">Багийн гишүүн</p>
+         </div>
+
+      </div>
+    </section>
+
+    <section id="schematic">
+      <h2 class="section-title">Arduino схемийн зураг</h2>
+      <div class="schematic-wrap">
+        <div class="panel card">
+          <div class="image-placeholder">
+<img class="schematic-real" width="600" height="600" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.1&permmsgid=msg-f:1862508301951145183&th=19d8f56ec10394df&view=att&disp=safe&realattid=f_mnzja8w60&zw" alt="" />
+ </div>
+        </div>
+        <div class="panel card">
+          <div class="image-placeholder"><img width="600" height="600" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.2&permmsgid=msg-f:1862508301951145183&th=19d8f56ec10394df&view=att&disp=safe&realattid=f_mnzjacd31&zw" alt=""></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Төсөл бүтээх үйл явц</h2>
+      <div class="process-grid">
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://substackcdn.com/image/fetch/$s_!Ll23!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3b0e4999-f792-44e5-a4ce-c888da9f1038_1280x720.png" alt=""></div><h3>1. Санаагаа олсон</h3><p>Математикийн хичээлд дурлуулах quiz game санааг сонгосон.</p></div>
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://cdn.prod.website-files.com/62196607bf1b46c300301846/6568ae443b83c8970807a066_tgumae817adlzfhcnuxn.webp" alt=""></div><h3>2. Төлөвлөсөн</h3><p>Асуулт, онооны систем, төхөөрөмжүүдийн ашиглалтыг төлөвлөсөн.</p></div>
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.1&permmsgid=msg-a:r1027412849157121732&th=19d96446b8aa13dc&view=fimg&fur=ip&permmsgid=msg-a:r1027412849157121732&sz=s0-l75-ft&attbid=ANGjdJ_G6zL1ixJIYMatBTUyGGlf8mI5wWldROxgDowftfoqFPB8NN1MPNIETGJBWJ9lHIeGDT3VC3bCyDOA29YygbTb7nuq3GXeEpX2PrayoXK3BogKSwMpRTX4Ooc&disp=emb&realattid=ii_mo1ghred0&zw" alt=""></div><h3>3. Код бичсэн</h3><p>Arduino IDE, Tinkercad дээр кодоо хөгжүүлж туршсан.</p></div>
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.1&permmsgid=msg-a:r9212004394510230960&th=19d9645b739317c9&view=fimg&fur=ip&permmsgid=msg-a:r9212004394510230960&sz=s0-l75-ft&attbid=ANGjdJ9zwkXzpCNyLiat-FihFscjM6pqfiXXL2locSv1aHBggpohdaPvZTtKKKVyQsV1B2hG1hqLRClpOqWVrgCThLNOD8F1PqS9fHtWvcwMeinZCZxD25ELuLxncSI&disp=emb&realattid=ii_19d9645ab74a6e8dbe81&zw" alt=""></div><h3>4. Холболт хийсэн</h3><p>LCD, LED, товчлуур, piezo, breadboard ашиглан схемээ угсарсан.</p></div>
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKpwFkPOCgpB9ngNgXwzaQ2aks0i7Lo-cNmQ&s" alt=""></div><h3>5. Алдаа зассан</h3><p>5V, GND болон дэлгэцийн алдааг шалгаж, засвар хийсэн.</p></div>
+        <div class="panel process-card"><div class="process-img"><img width="300" height="300" src="https://mail.google.com/mail/u/0?ui=2&ik=6f7e938ff0&attid=0.2&permmsgid=msg-a:r7048030619872270442&th=19d964a20ed8c19a&view=fimg&fur=ip&permmsgid=msg-a:r7048030619872270442&sz=s0-l75-ft&attbid=ANGjdJ-9kuI-hxK1Ko9h7PjIsNOv1Ul7CNdEbID49SGEpK8PSZ1cHLdHvDePWns9QH3LbIOP-WOlsfq0W1rL1LPFYDI6Hxs2ricYMSDZJjyCLA71hepYXSll7P6N2TE&disp=emb&realattid=ii_19d964a13aa5c3eb6e72&zw" alt=""></div><h3>6. Бэлэн болгосон</h3><p>Танилцуулга, demo, бичлэгээ нэгтгээд төслөө хамгаалахад бэлэн болгосон.</p></div>
+      </div>
+    </section>
+
+    <section id="game">
+      <h2 class="section-title">Arcade Quiz Demo</h2>
+      <div class="panel quiz-panel">
+        <div id="quizSection">
+          <div class="hud">
+            <div class="hud-box"><div class="hud-label">Оноо</div><div class="hud-value" id="scoreValue">0</div></div>
+            <div class="hud-box"><div class="hud-label">Асуулт</div><div class="hud-value" id="questionValue">1 / 5</div></div>
+            <div class="hud-box"><div class="hud-label">Хугацаа</div><div class="hud-value" id="timerValue">15</div></div>
+          </div>
+
+          <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+          <div class="question-box" id="questionBox">2 + 3 = ?</div>
+          <div class="answers" id="answers"></div>
+          <div class="status-bar" id="statusBar"></div>
+        </div>
+
+        <div class="winner-screen" id="winnerScreen">
+          <div class="trophy">🏆</div>
+          <h3 class="winner-title">Баяр хүргэе!</h3>
+          <div class="winner-score" id="winnerScoreText">Оноо: 0 / 5</div>
+          <p id="winnerMessage" style="max-width:520px;margin:0 auto 18px;color:#dccdf1;line-height:1.8">
+            Маш сайн! Та тоглоомоо амжилттай дуусгалаа.
+          </p>
+          <button class="btn btn-primary" onclick="restartQuiz()">Дахин эхлэх</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>НЭСТ ЭДҮКЭЙШН АЙ ТИ ДУНД СУРГУУЛЬ</div>
+      <div class="footer-note">8а ангийн Quiz Game төсөл</div>
+    </footer>
+  </div>
+
+  <script>
+    const quizData = [
+      { question: "2 + 3 = ?", answers: ["4", "5", "6", "7"], correct: 1 },
+      { question: "10 - 4 = ?", answers: ["5", "6", "7", "8"], correct: 1 },
+      { question: "3 × 3 = ?", answers: ["6", "8", "9", "12"], correct: 2 },
+      { question: "12 ÷ 3 = ?", answers: ["3", "4", "5", "6"], correct: 1 },
+      { question: "7 + 5 = ?", answers: ["11", "12", "13", "14"], correct: 1 },
+      {question: "789 - 19 = ?":, answers: ["768", "769", "771", "770"], correct: 4}
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timer = null;
+    const maxTime = 15;
+
+    const scoreValue = document.getElementById("scoreValue");
+    const questionValue = document.getElementById("questionValue");
+    const timerValue = document.getElementById("timerValue");
+    const progressBar = document.getElementById("progressBar");
+    const questionBox = document.getElementById("questionBox");
+    const answers = document.getElementById("answers");
+    const statusBar = document.getElementById("statusBar");
+    const winnerScreen = document.getElementById("winnerScreen");
+    const quizSection = document.getElementById("quizSection");
+    const winnerScoreText = document.getElementById("winnerScoreText");
+    const winnerMessage = document.getElementById("winnerMessage");
+    const confetti = document.getElementById("confetti");
+    const previewScore = document.getElementById("previewScore");
+
+    function updateHUD() {
+      scoreValue.textContent = score;
+      previewScore.textContent = String(score).padStart(3, "0");
+      questionValue.textContent = `${Math.min(currentQuestion + 1, quizData.length)} / ${quizData.length}`;
+      timerValue.textContent = timeLeft;
+      progressBar.style.width = `${(timeLeft / maxTime) * 100}%`;
+      if (timeLeft <= 5) timerValue.classList.add("timer-low");
+      else timerValue.classList.remove("timer-low");
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = maxTime;
+      updateHUD();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateHUD();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          lockAnswers();
+          statusBar.textContent = "⏰ Хугацаа дууслаа!";
+          setTimeout(nextQuestion, 900);
+        }
+      }, 1000);
+    }
+
+    function lockAnswers() {
+      document.querySelectorAll(".answer-btn").forEach(btn => btn.disabled = true);
+    }
+
+    function showQuestion() {
+      if (currentQuestion >= quizData.length) {
+        showWinner();
+        return;
+      }
+      const q = quizData[currentQuestion];
+      questionBox.textContent = q.question;
+      answers.innerHTML = "";
+      statusBar.textContent = "";
+      q.answers.forEach((answer, index) => {
+        const button = document.createElement("button");
+        button.className = "answer-btn";
+        button.textContent = answer;
+        button.onclick = () => checkAnswer(index, button);
+        answers.appendChild(button);
+      });
+      startTimer();
+      updateHUD();
+    }
+
+    function checkAnswer(selectedIndex, button) {
+      clearInterval(timer);
+      const correctIndex = quizData[currentQuestion].correct;
+      const allButtons = document.querySelectorAll(".answer-btn");
+      allButtons.forEach(btn => btn.disabled = true);
+
+      if (selectedIndex === correctIndex) {
+        button.classList.add("correct");
+        statusBar.textContent = "✅ Зөв хариулт!";
+        score++;
+      } else {
+        button.classList.add("wrong");
+        allButtons[correctIndex].classList.add("correct");
+        statusBar.textContent = "❌ Буруу хариулт!";
+      }
+
+      updateHUD();
+      setTimeout(nextQuestion, 900);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      showQuestion();
+    }
+    function createConfetti() {
+      confetti.innerHTML = "";
+      confetti.classList.add("show");
+      const colors = ["#ffd84d", "#ff4fd8", "#57f3ff", "#43e97b", "#ffffff"];
+      for (let i = 0; i < 90; i++) {
+        const piece = document.createElement("span");
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (2.8 + Math.random() * 2.2) + "s";
+        piece.style.animationDelay = (Math.random() * 0.6) + "s";
+        confetti.appendChild(piece);
+      }
+    }
+    function showWinner() {
+      clearInterval(timer);
+      quizSection.style.display = "none";
+      winnerScreen.classList.add("show");
+      winnerScoreText.textContent = `Оноо: ${score} / ${quizData.length}`;
+      if (score === quizData.length) {
+        winnerMessage.textContent = "Гайхалтай! Бүх асуултад зөв хариуллаа.";
+      } else if (score >= 3) {
+        winnerMessage.textContent = "Маш сайн! Чи ихэнх асуултад зөв хариуллаа.";
+      } else {
+        winnerMessage.textContent = "Сайн байна. Дахин тоглоод оноогоо ахиулаарай.";
+      }
+
+      createConfetti();
+    }
+
+    function restartQuiz() {
+      clearInterval(timer);
+      currentQuestion = 0;
+      score = 0;
+      timeLeft = maxTime;
+      confetti.classList.remove("show");
+      winnerScreen.classList.remove("show");
+      quizSection.style.display = "block";
+      updateHUD();
+      showQuestion();
+      document.getElementById('game').scrollIntoView({behavior:'smooth'});
+    }
+    updateHUD();
+    showQuestion();
+  </script>
+</body>
+</html>
